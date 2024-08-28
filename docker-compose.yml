@@ -1,0 +1,27 @@
+services:
+  dynamodb:
+    image: amazon/dynamodb-local:latest
+    container_name: dynamodb
+    ports:
+      - "8000:8000"
+    command: "-jar DynamoDBLocal.jar -sharedDb -inMemory"
+    networks:
+      - app-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: app
+    ports:
+      - "8080:8080"
+    environment:
+      - DYNAMODB_ENDPOINT=http://dynamodb:8000
+    depends_on:
+      - dynamodb
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
