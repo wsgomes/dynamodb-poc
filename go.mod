@@ -1,4 +1,4 @@
-module wsgomes.com/app
+module github.com/wsgomes/dynamodb-poc
 
 go 1.22
 

@@ -86,6 +86,10 @@ func main() {
 
 	time.Sleep(5 * time.Second)
 
+	/**
+	/ PutItem flow
+	**/
+
 	items := []Item{
 		{UserID: "123", FirstDay: "20240820#bills#groupid1", LastDay: "20240825", Data: "XYZ"},
 		{UserID: "123", FirstDay: "20240822#bills#groupid1", LastDay: "20240827", Data: "XYZ"},
@@ -94,6 +98,7 @@ func main() {
 		{UserID: "123", FirstDay: "20240828#bills#groupid1", LastDay: "20240904", Data: "XYZ"},
 		{UserID: "123", FirstDay: "20240829#bills#groupid1", LastDay: "20240905", Data: "XYZ"},
 		{UserID: "124", FirstDay: "20240826#bills#groupid2", LastDay: "20240828", Data: "XYZ"},
+		{UserID: "124", FirstDay: "20240827#bills#groupid2", LastDay: "20240829", Data: "XYZ"},
 	}
 
 	var inputConsumedCapacity float64
@@ -116,6 +121,94 @@ func main() {
 		inputConsumedCapacity += *putItemOutput.ConsumedCapacity.CapacityUnits
 	}
 	fmt.Printf("Items inserted successfully! Consumed capacity by %d items: %.2f\n", len(items), inputConsumedCapacity)
+
+	/**
+	/ BatchWriteItem flow
+	**/
+
+	moreItems := []Item{
+		{UserID: "125", FirstDay: "20240820#bills#groupid1", LastDay: "20240825", Data: "XYZ"},
+		{UserID: "125", FirstDay: "20240822#bills#groupid1", LastDay: "20240827", Data: "XYZ"},
+		{UserID: "125", FirstDay: "20240825#bills#groupid1", LastDay: "20240830", Data: "XYZ"},
+		{UserID: "125", FirstDay: "20240827#bills#groupid1", LastDay: "20240901", Data: "XYZ"},
+		{UserID: "125", FirstDay: "20240828#bills#groupid1", LastDay: "20240904", Data: "XYZ"},
+		{UserID: "126", FirstDay: "20240820#bills#groupid1", LastDay: "20240825", Data: "XYZ"},
+		{UserID: "126", FirstDay: "20240822#bills#groupid1", LastDay: "20240827", Data: "XYZ"},
+		{UserID: "126", FirstDay: "20240825#bills#groupid1", LastDay: "20240830", Data: "XYZ"},
+		{UserID: "126", FirstDay: "20240827#bills#groupid1", LastDay: "20240901", Data: "XYZ"},
+		{UserID: "126", FirstDay: "20240828#bills#groupid1", LastDay: "20240904", Data: "XYZ"},
+		{UserID: "127", FirstDay: "20240820#bills#groupid1", LastDay: "20240825", Data: "XYZ"},
+		{UserID: "127", FirstDay: "20240822#bills#groupid1", LastDay: "20240827", Data: "XYZ"},
+		{UserID: "127", FirstDay: "20240825#bills#groupid1", LastDay: "20240830", Data: "XYZ"},
+		{UserID: "127", FirstDay: "20240827#bills#groupid1", LastDay: "20240901", Data: "XYZ"},
+		{UserID: "127", FirstDay: "20240828#bills#groupid1", LastDay: "20240904", Data: "XYZ"},
+		{UserID: "128", FirstDay: "20240820#bills#groupid1", LastDay: "20240825", Data: "XYZ"},
+		{UserID: "128", FirstDay: "20240822#bills#groupid1", LastDay: "20240827", Data: "XYZ"},
+		{UserID: "128", FirstDay: "20240825#bills#groupid1", LastDay: "20240830", Data: "XYZ"},
+		{UserID: "128", FirstDay: "20240827#bills#groupid1", LastDay: "20240901", Data: "XYZ"},
+		{UserID: "128", FirstDay: "20240828#bills#groupid1", LastDay: "20240904", Data: "XYZ"},
+		{UserID: "129", FirstDay: "20240820#bills#groupid1", LastDay: "20240825", Data: "XYZ"},
+		{UserID: "129", FirstDay: "20240822#bills#groupid1", LastDay: "20240827", Data: "XYZ"},
+		{UserID: "129", FirstDay: "20240825#bills#groupid1", LastDay: "20240830", Data: "XYZ"},
+		{UserID: "129", FirstDay: "20240827#bills#groupid1", LastDay: "20240901", Data: "XYZ"},
+		{UserID: "129", FirstDay: "20240828#bills#groupid1", LastDay: "20240904", Data: "XYZ"},
+	}
+
+	var writeRequests []*dynamodb.WriteRequest
+	for _, item := range moreItems {
+		av, err := dynamodbattribute.MarshalMap(item)
+		if err != nil {
+			log.Fatalf("Failed to marshal item: %v", err)
+		}
+
+		writeRequests = append(writeRequests, &dynamodb.WriteRequest{
+			PutRequest: &dynamodb.PutRequest{
+				Item: av,
+			},
+		})
+	}
+
+	const batchSize = 25
+	var totalConsumedCapacity float64
+
+	for i := 0; i < len(writeRequests); i += batchSize {
+		fmt.Println(i)
+		end := i + batchSize
+		if end > len(writeRequests) {
+			end = len(writeRequests)
+		}
+
+		batch := writeRequests[i:end]
+		input := &dynamodb.BatchWriteItemInput{
+			RequestItems: map[string][]*dynamodb.WriteRequest{
+				"TestTable": batch,
+			},
+			ReturnConsumedCapacity: aws.String(dynamodb.ReturnConsumedCapacityTotal),
+		}
+
+		for {
+			output, err := svc.BatchWriteItem(input)
+			if err != nil {
+				log.Fatalf("Failed to write batch: %v", err)
+			}
+
+			for _, consumed := range output.ConsumedCapacity {
+				totalConsumedCapacity += *consumed.CapacityUnits
+			}
+
+			if len(output.UnprocessedItems) == 0 {
+				break
+			}
+			log.Println("Retrying unprocessed items...")
+			input.RequestItems = output.UnprocessedItems
+		}
+	}
+
+	fmt.Printf("Batch write completed successfully. Consumed capacity: %.2f\n", totalConsumedCapacity)
+
+	/**
+	/ Get flow
+	**/
 
 	today := "20240827"
 	todayLimit := "20240828" // Everything LessThan todayLimit
@@ -157,4 +250,88 @@ func main() {
 	for _, item := range retrievedItems {
 		fmt.Printf("UserID: %s, FirstDay: %s, LastDay: %s, Data: %s\n", item.UserID, item.FirstDay, item.LastDay, item.Data)
 	}
+
+	/**
+	/ Delete flow
+	**/
+
+	userID := "124"
+	firstDay := "20240827#bills#groupid2"
+
+	deleteInput := &dynamodb.DeleteItemInput{
+		TableName: aws.String("TestTable"),
+		Key: map[string]*dynamodb.AttributeValue{
+			"UserID": {
+				S: aws.String(userID),
+			},
+			"FirstDay": {
+				S: aws.String(firstDay),
+			},
+		},
+		ReturnConsumedCapacity: aws.String(dynamodb.ReturnConsumedCapacityTotal),
+	}
+
+	deleteOutput, err := svc.DeleteItem(deleteInput)
+	if err != nil {
+		log.Fatalf("Failed to delete item: %v", err)
+	}
+
+	fmt.Printf("Item successfully deleted. Consumed capacity: %.2f\n", *deleteOutput.ConsumedCapacity.CapacityUnits)
+
+	/**
+	/ Delete BatchWriteItem flow
+	**/
+
+	var deleteRequests []*dynamodb.WriteRequest
+	for _, key := range moreItems {
+		deleteRequests = append(deleteRequests, &dynamodb.WriteRequest{
+			DeleteRequest: &dynamodb.DeleteRequest{
+				Key: map[string]*dynamodb.AttributeValue{
+					"UserID": {
+						S: aws.String(key.UserID),
+					},
+					"FirstDay": {
+						S: aws.String(key.FirstDay),
+					},
+				},
+			},
+		})
+	}
+
+	totalConsumedCapacity = 0
+
+	for i := 0; i < len(deleteRequests); i += batchSize {
+		fmt.Println(i)
+		end := i + batchSize
+		if end > len(deleteRequests) {
+			end = len(deleteRequests)
+		}
+
+		batch := deleteRequests[i:end]
+		input := &dynamodb.BatchWriteItemInput{
+			RequestItems: map[string][]*dynamodb.WriteRequest{
+				"TestTable": batch,
+			},
+			ReturnConsumedCapacity: aws.String(dynamodb.ReturnConsumedCapacityTotal),
+		}
+
+		for {
+			output, err := svc.BatchWriteItem(input)
+			if err != nil {
+				log.Fatalf("Failed to delete batch: %v", err)
+			}
+
+			for _, consumed := range output.ConsumedCapacity {
+				totalConsumedCapacity += *consumed.CapacityUnits
+			}
+
+			if len(output.UnprocessedItems) == 0 {
+				break
+			}
+			log.Println("Retrying unprocessed items...")
+			input.RequestItems = output.UnprocessedItems
+		}
+	}
+
+	fmt.Printf("Batch delete completed successfully. Consumed capacity: %.2f\n", totalConsumedCapacity)
 }
