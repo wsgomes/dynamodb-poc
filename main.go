@@ -87,12 +87,13 @@ func main() {
 	time.Sleep(5 * time.Second)
 
 	items := []Item{
-		{UserID: "123", FirstDay: "2024-08-20", LastDay: "2024-08-25", Data: "XYZ"},
-		{UserID: "123", FirstDay: "2024-08-22", LastDay: "2024-08-27", Data: "XYZ"},
-		{UserID: "123", FirstDay: "2024-08-25", LastDay: "2024-08-30", Data: "XYZ"},
-		{UserID: "123", FirstDay: "2024-08-27", LastDay: "2024-09-01", Data: "XYZ"},
-		{UserID: "123", FirstDay: "2024-08-29", LastDay: "2024-09-05", Data: "XYZ"},
-		{UserID: "124", FirstDay: "2024-08-26", LastDay: "2024-08-28", Data: "XYZ"},
+		{UserID: "123", FirstDay: "20240820#bills#groupid1", LastDay: "20240825", Data: "XYZ"},
+		{UserID: "123", FirstDay: "20240822#bills#groupid1", LastDay: "20240827", Data: "XYZ"},
+		{UserID: "123", FirstDay: "20240825#bills#groupid1", LastDay: "20240830", Data: "XYZ"},
+		{UserID: "123", FirstDay: "20240827#bills#groupid1", LastDay: "20240901", Data: "XYZ"},
+		{UserID: "123", FirstDay: "20240828#bills#groupid1", LastDay: "20240904", Data: "XYZ"},
+		{UserID: "123", FirstDay: "20240829#bills#groupid1", LastDay: "20240905", Data: "XYZ"},
+		{UserID: "124", FirstDay: "20240826#bills#groupid2", LastDay: "20240828", Data: "XYZ"},
 	}
 
 	var inputConsumedCapacity float64
@@ -116,10 +117,11 @@ func main() {
 	}
 	fmt.Printf("Items inserted successfully! Consumed capacity by %d items: %.2f\n", len(items), inputConsumedCapacity)
 
-	today := "2024-08-27"
+	today := "20240827"
+	todayLimit := "20240828" // Everything LessThan todayLimit
 
 	keyCond := expression.Key("UserID").Equal(expression.Value("123")).And(
-		expression.Key("FirstDay").LessThanEqual(expression.Value(today)),
+		expression.Key("FirstDay").LessThan(expression.Value(todayLimit)),
 	)
 
 	filterExpr := expression.Name("LastDay").GreaterThanEqual(expression.Value(today))
