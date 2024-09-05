@@ -17,8 +17,8 @@ import (
 type Item struct {
 	UserID   string `json:"UserID"`   // Partition key
 	FirstDay string `json:"FirstDay"` // Sort key (start date)
-	LastDay  string `json:"LastDay"`  // Additional attribute (end date)
-	Data     string `json:"Data"`     // Additional data
+	LastDay  int64  `json:"LastDay"`  // Also used as TTL
+	Data     string `json:"Data"`
 }
 
 func main() {
@@ -91,14 +91,14 @@ func main() {
 	**/
 
 	items := []Item{
-		{UserID: "123", FirstDay: "20240820#bills#groupid1", LastDay: "20240825", Data: "XYZ"},
-		{UserID: "123", FirstDay: "20240822#bills#groupid1", LastDay: "20240827", Data: "XYZ"},
-		{UserID: "123", FirstDay: "20240825#bills#groupid1", LastDay: "20240830", Data: "XYZ"},
-		{UserID: "123", FirstDay: "20240827#bills#groupid1", LastDay: "20240901", Data: "XYZ"},
-		{UserID: "123", FirstDay: "20240828#bills#groupid1", LastDay: "20240904", Data: "XYZ"},
-		{UserID: "123", FirstDay: "20240829#bills#groupid1", LastDay: "20240905", Data: "XYZ"},
-		{UserID: "124", FirstDay: "20240826#bills#groupid2", LastDay: "20240828", Data: "XYZ"},
-		{UserID: "124", FirstDay: "20240827#bills#groupid2", LastDay: "20240829", Data: "XYZ"},
+		{UserID: "123", FirstDay: "20240820#bills#groupid1", LastDay: GetLastDayUnix("20240825"), Data: "XYZ"},
+		{UserID: "123", FirstDay: "20240822#bills#groupid1", LastDay: GetLastDayUnix("20240827"), Data: "XYZ"},
+		{UserID: "123", FirstDay: "20240825#bills#groupid1", LastDay: GetLastDayUnix("20240830"), Data: "XYZ"},
+		{UserID: "123", FirstDay: "20240827#bills#groupid1", LastDay: GetLastDayUnix("20240901"), Data: "XYZ"},
+		{UserID: "123", FirstDay: "20240828#bills#groupid1", LastDay: GetLastDayUnix("20240904"), Data: "XYZ"},
+		{UserID: "123", FirstDay: "20240829#bills#groupid1", LastDay: GetLastDayUnix("20240905"), Data: "XYZ"},
+		{UserID: "124", FirstDay: "20240826#bills#groupid2", LastDay: GetLastDayUnix("20240828"), Data: "XYZ"},
+		{UserID: "124", FirstDay: "20240827#bills#groupid2", LastDay: GetLastDayUnix("20240829"), Data: "XYZ"},
 	}
 
 	var inputConsumedCapacity float64
@@ -127,31 +127,31 @@ func main() {
 	**/
 
 	moreItems := []Item{
-		{UserID: "125", FirstDay: "20240820#bills#groupid1", LastDay: "20240825", Data: "XYZ"},
-		{UserID: "125", FirstDay: "20240822#bills#groupid1", LastDay: "20240827", Data: "XYZ"},
-		{UserID: "125", FirstDay: "20240825#bills#groupid1", LastDay: "20240830", Data: "XYZ"},
-		{UserID: "125", FirstDay: "20240827#bills#groupid1", LastDay: "20240901", Data: "XYZ"},
-		{UserID: "125", FirstDay: "20240828#bills#groupid1", LastDay: "20240904", Data: "XYZ"},
-		{UserID: "126", FirstDay: "20240820#bills#groupid1", LastDay: "20240825", Data: "XYZ"},
-		{UserID: "126", FirstDay: "20240822#bills#groupid1", LastDay: "20240827", Data: "XYZ"},
-		{UserID: "126", FirstDay: "20240825#bills#groupid1", LastDay: "20240830", Data: "XYZ"},
-		{UserID: "126", FirstDay: "20240827#bills#groupid1", LastDay: "20240901", Data: "XYZ"},
-		{UserID: "126", FirstDay: "20240828#bills#groupid1", LastDay: "20240904", Data: "XYZ"},
-		{UserID: "127", FirstDay: "20240820#bills#groupid1", LastDay: "20240825", Data: "XYZ"},
-		{UserID: "127", FirstDay: "20240822#bills#groupid1", LastDay: "20240827", Data: "XYZ"},
-		{UserID: "127", FirstDay: "20240825#bills#groupid1", LastDay: "20240830", Data: "XYZ"},
-		{UserID: "127", FirstDay: "20240827#bills#groupid1", LastDay: "20240901", Data: "XYZ"},
-		{UserID: "127", FirstDay: "20240828#bills#groupid1", LastDay: "20240904", Data: "XYZ"},
-		{UserID: "128", FirstDay: "20240820#bills#groupid1", LastDay: "20240825", Data: "XYZ"},
-		{UserID: "128", FirstDay: "20240822#bills#groupid1", LastDay: "20240827", Data: "XYZ"},
-		{UserID: "128", FirstDay: "20240825#bills#groupid1", LastDay: "20240830", Data: "XYZ"},
-		{UserID: "128", FirstDay: "20240827#bills#groupid1", LastDay: "20240901", Data: "XYZ"},
-		{UserID: "128", FirstDay: "20240828#bills#groupid1", LastDay: "20240904", Data: "XYZ"},
-		{UserID: "129", FirstDay: "20240820#bills#groupid1", LastDay: "20240825", Data: "XYZ"},
-		{UserID: "129", FirstDay: "20240822#bills#groupid1", LastDay: "20240827", Data: "XYZ"},
-		{UserID: "129", FirstDay: "20240825#bills#groupid1", LastDay: "20240830", Data: "XYZ"},
-		{UserID: "129", FirstDay: "20240827#bills#groupid1", LastDay: "20240901", Data: "XYZ"},
-		{UserID: "129", FirstDay: "20240828#bills#groupid1", LastDay: "20240904", Data: "XYZ"},
+		{UserID: "125", FirstDay: "20240820#bills#groupid1", LastDay: GetLastDayUnix("20240825"), Data: "XYZ"},
+		{UserID: "125", FirstDay: "20240822#bills#groupid1", LastDay: GetLastDayUnix("20240827"), Data: "XYZ"},
+		{UserID: "125", FirstDay: "20240825#bills#groupid1", LastDay: GetLastDayUnix("20240830"), Data: "XYZ"},
+		{UserID: "125", FirstDay: "20240827#bills#groupid1", LastDay: GetLastDayUnix("20240901"), Data: "XYZ"},
+		{UserID: "125", FirstDay: "20240828#bills#groupid1", LastDay: GetLastDayUnix("20240904"), Data: "XYZ"},
+		{UserID: "126", FirstDay: "20240820#bills#groupid1", LastDay: GetLastDayUnix("20240825"), Data: "XYZ"},
+		{UserID: "126", FirstDay: "20240822#bills#groupid1", LastDay: GetLastDayUnix("20240827"), Data: "XYZ"},
+		{UserID: "126", FirstDay: "20240825#bills#groupid1", LastDay: GetLastDayUnix("20240830"), Data: "XYZ"},
+		{UserID: "126", FirstDay: "20240827#bills#groupid1", LastDay: GetLastDayUnix("20240901"), Data: "XYZ"},
+		{UserID: "126", FirstDay: "20240828#bills#groupid1", LastDay: GetLastDayUnix("20240904"), Data: "XYZ"},
+		{UserID: "127", FirstDay: "20240820#bills#groupid1", LastDay: GetLastDayUnix("20240825"), Data: "XYZ"},
+		{UserID: "127", FirstDay: "20240822#bills#groupid1", LastDay: GetLastDayUnix("20240827"), Data: "XYZ"},
+		{UserID: "127", FirstDay: "20240825#bills#groupid1", LastDay: GetLastDayUnix("20240830"), Data: "XYZ"},
+		{UserID: "127", FirstDay: "20240827#bills#groupid1", LastDay: GetLastDayUnix("20240901"), Data: "XYZ"},
+		{UserID: "127", FirstDay: "20240828#bills#groupid1", LastDay: GetLastDayUnix("20240904"), Data: "XYZ"},
+		{UserID: "128", FirstDay: "20240820#bills#groupid1", LastDay: GetLastDayUnix("20240825"), Data: "XYZ"},
+		{UserID: "128", FirstDay: "20240822#bills#groupid1", LastDay: GetLastDayUnix("20240827"), Data: "XYZ"},
+		{UserID: "128", FirstDay: "20240825#bills#groupid1", LastDay: GetLastDayUnix("20240830"), Data: "XYZ"},
+		{UserID: "128", FirstDay: "20240827#bills#groupid1", LastDay: GetLastDayUnix("20240901"), Data: "XYZ"},
+		{UserID: "128", FirstDay: "20240828#bills#groupid1", LastDay: GetLastDayUnix("20240904"), Data: "XYZ"},
+		{UserID: "129", FirstDay: "20240820#bills#groupid1", LastDay: GetLastDayUnix("20240825"), Data: "XYZ"},
+		{UserID: "129", FirstDay: "20240822#bills#groupid1", LastDay: GetLastDayUnix("20240827"), Data: "XYZ"},
+		{UserID: "129", FirstDay: "20240825#bills#groupid1", LastDay: GetLastDayUnix("20240830"), Data: "XYZ"},
+		{UserID: "129", FirstDay: "20240827#bills#groupid1", LastDay: GetLastDayUnix("20240901"), Data: "XYZ"},
+		{UserID: "129", FirstDay: "20240828#bills#groupid1", LastDay: GetLastDayUnix("20240904"), Data: "XYZ"},
 	}
 
 	var writeRequests []*dynamodb.WriteRequest
@@ -206,18 +206,21 @@ func main() {
 
 	fmt.Printf("Batch write completed successfully. Consumed capacity: %.2f\n", totalConsumedCapacity)
 
+	location, err := time.LoadLocation("America/Sao_Paulo")
+	if err != nil {
+		log.Fatalf("Failed to load location: %v", err)
+	}
+	queryDate := time.Date(2024, time.Month(8), 27, 0, 0, 0, 0, location) // Today
+
 	/**
 	/ Get flow
 	**/
 
-	today := "20240827"
-	todayLimit := "20240828" // Everything LessThan todayLimit
-
 	keyCond := expression.Key("UserID").Equal(expression.Value("123")).And(
-		expression.Key("FirstDay").LessThan(expression.Value(todayLimit)),
+		expression.Key("FirstDay").LessThan(expression.Value(queryDate.Add(24 * time.Hour).Format("20060102"))),
 	)
 
-	filterExpr := expression.Name("LastDay").GreaterThanEqual(expression.Value(today))
+	filterExpr := expression.Name("LastDay").GreaterThan(expression.Value(queryDate.Unix()))
 
 	expr, err := expression.NewBuilder().WithKeyCondition(keyCond).WithFilter(filterExpr).Build()
 	if err != nil {
@@ -248,7 +251,7 @@ func main() {
 
 	fmt.Println("Query results:")
 	for _, item := range retrievedItems {
-		fmt.Printf("UserID: %s, FirstDay: %s, LastDay: %s, Data: %s\n", item.UserID, item.FirstDay, item.LastDay, item.Data)
+		fmt.Printf("UserID: %s, FirstDay: %s, LastDay: %s, Data: %s\n", item.UserID, item.FirstDay, time.Unix(item.LastDay, 0).In(location), item.Data)
 	}
 
 	/**
@@ -334,4 +337,28 @@ func main() {
 	}
 
 	fmt.Printf("Batch delete completed successfully. Consumed capacity: %.2f\n", totalConsumedCapacity)
+}
+
+func GetLastDayUnix(dateStr string) int64 {
+	const layout = "20060102"
+
+	parsedTime, err := time.Parse(layout, dateStr)
+	if err != nil {
+		log.Fatalf("Failed to parse dateStr: %v", err)
+	}
+
+	location, err := time.LoadLocation("America/Sao_Paulo")
+	if err != nil {
+		log.Fatalf("Failed to load location: %v", err)
+	}
+
+	timeInLocation := time.Date(
+		parsedTime.Year(),
+		parsedTime.Month(),
+		parsedTime.Day(),
+		0, 0, 0, 0,
+		location,
+	)
+
+	return timeInLocation.Add(24 * time.Hour).Unix()
 }
