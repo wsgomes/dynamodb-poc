@@ -15,10 +15,10 @@ import (
 )
 
 type Item struct {
-	UserID   string `json:"UserID"`   // Partition key
-	FirstDay string `json:"FirstDay"` // Sort key (start date)
-	LastDay  int64  `json:"LastDay"`  // Also used as TTL
-	Data     string `json:"Data"`
+	UserID string `json:"UserID"` // Partition key
+	Start  string `json:"Start"`  // Sort key (start datetime)
+	End    int64  `json:"End"`    // Also used as TTL
+	Data   string `json:"Data"`
 }
 
 func main() {
@@ -58,7 +58,7 @@ func main() {
 				AttributeType: aws.String("S"),
 			},
 			{
-				AttributeName: aws.String("FirstDay"),
+				AttributeName: aws.String("Start"),
 				AttributeType: aws.String("S"),
 			},
 		},
@@ -68,7 +68,7 @@ func main() {
 				KeyType:       aws.String("HASH"),
 			},
 			{
-				AttributeName: aws.String("FirstDay"),
+				AttributeName: aws.String("Start"),
 				KeyType:       aws.String("RANGE"),
 			},
 		},
@@ -91,14 +91,14 @@ func main() {
 	**/
 
 	items := []Item{
-		{UserID: "123", FirstDay: "20240820000000_bills_groupid1", LastDay: GetLastDayUnix("20240825000000"), Data: "XYZ"},
-		{UserID: "123", FirstDay: "20240822000000_bills_groupid1", LastDay: GetLastDayUnix("20240827070707"), Data: "XYZ"},
-		{UserID: "123", FirstDay: "20240825000000_bills_groupid1", LastDay: GetLastDayUnix("20240830000000"), Data: "XYZ"},
-		{UserID: "123", FirstDay: "20240827070707_bills_groupid1", LastDay: GetLastDayUnix("20240901000000"), Data: "XYZ"},
-		{UserID: "123", FirstDay: "20240828000000_bills_groupid1", LastDay: GetLastDayUnix("20240904000000"), Data: "XYZ"},
-		{UserID: "123", FirstDay: "20240829000000_bills_groupid1", LastDay: GetLastDayUnix("20240905000000"), Data: "XYZ"},
-		{UserID: "124", FirstDay: "20240826000000_bills_groupid2", LastDay: GetLastDayUnix("20240828000000"), Data: "XYZ"},
-		{UserID: "124", FirstDay: "20240827000000_bills_groupid2", LastDay: GetLastDayUnix("20240829000000"), Data: "XYZ"},
+		{UserID: "123", Start: "20240820000000_bills_groupid1", End: GetEndUnix("20240825000000"), Data: "XYZ"},
+		{UserID: "123", Start: "20240822000000_bills_groupid1", End: GetEndUnix("20240827070707"), Data: "XYZ"},
+		{UserID: "123", Start: "20240825000000_bills_groupid1", End: GetEndUnix("20240830000000"), Data: "XYZ"},
+		{UserID: "123", Start: "20240827070707_bills_groupid1", End: GetEndUnix("20240901000000"), Data: "XYZ"},
+		{UserID: "123", Start: "20240828000000_bills_groupid1", End: GetEndUnix("20240904000000"), Data: "XYZ"},
+		{UserID: "123", Start: "20240829000000_bills_groupid1", End: GetEndUnix("20240905000000"), Data: "XYZ"},
+		{UserID: "124", Start: "20240826000000_bills_groupid2", End: GetEndUnix("20240828000000"), Data: "XYZ"},
+		{UserID: "124", Start: "20240827000000_bills_groupid2", End: GetEndUnix("20240829000000"), Data: "XYZ"},
 	}
 
 	var inputConsumedCapacity float64
@@ -127,31 +127,31 @@ func main() {
 	**/
 
 	moreItems := []Item{
-		{UserID: "125", FirstDay: "20240820000000_bills_groupid1", LastDay: GetLastDayUnix("20240825000000"), Data: "XYZ"},
-		{UserID: "125", FirstDay: "20240822000000_bills_groupid1", LastDay: GetLastDayUnix("20240827000000"), Data: "XYZ"},
-		{UserID: "125", FirstDay: "20240825000000_bills_groupid1", LastDay: GetLastDayUnix("20240830000000"), Data: "XYZ"},
-		{UserID: "125", FirstDay: "20240827000000_bills_groupid1", LastDay: GetLastDayUnix("20240901000000"), Data: "XYZ"},
-		{UserID: "125", FirstDay: "20240828000000_bills_groupid1", LastDay: GetLastDayUnix("20240904000000"), Data: "XYZ"},
-		{UserID: "126", FirstDay: "20240820000000_bills_groupid1", LastDay: GetLastDayUnix("20240825000000"), Data: "XYZ"},
-		{UserID: "126", FirstDay: "20240822000000_bills_groupid1", LastDay: GetLastDayUnix("20240827000000"), Data: "XYZ"},
-		{UserID: "126", FirstDay: "20240825000000_bills_groupid1", LastDay: GetLastDayUnix("20240830000000"), Data: "XYZ"},
-		{UserID: "126", FirstDay: "20240827000000_bills_groupid1", LastDay: GetLastDayUnix("20240901000000"), Data: "XYZ"},
-		{UserID: "126", FirstDay: "20240828000000_bills_groupid1", LastDay: GetLastDayUnix("20240904000000"), Data: "XYZ"},
-		{UserID: "127", FirstDay: "20240820000000_bills_groupid1", LastDay: GetLastDayUnix("20240825000000"), Data: "XYZ"},
-		{UserID: "127", FirstDay: "20240822000000_bills_groupid1", LastDay: GetLastDayUnix("20240827000000"), Data: "XYZ"},
-		{UserID: "127", FirstDay: "20240825000000_bills_groupid1", LastDay: GetLastDayUnix("20240830000000"), Data: "XYZ"},
-		{UserID: "127", FirstDay: "20240827000000_bills_groupid1", LastDay: GetLastDayUnix("20240901000000"), Data: "XYZ"},
-		{UserID: "127", FirstDay: "20240828000000_bills_groupid1", LastDay: GetLastDayUnix("20240904000000"), Data: "XYZ"},
-		{UserID: "128", FirstDay: "20240820000000_bills_groupid1", LastDay: GetLastDayUnix("20240825000000"), Data: "XYZ"},
-		{UserID: "128", FirstDay: "20240822000000_bills_groupid1", LastDay: GetLastDayUnix("20240827000000"), Data: "XYZ"},
-		{UserID: "128", FirstDay: "20240825000000_bills_groupid1", LastDay: GetLastDayUnix("20240830000000"), Data: "XYZ"},
-		{UserID: "128", FirstDay: "20240827000000_bills_groupid1", LastDay: GetLastDayUnix("20240901000000"), Data: "XYZ"},
-		{UserID: "128", FirstDay: "20240828000000_bills_groupid1", LastDay: GetLastDayUnix("20240904000000"), Data: "XYZ"},
-		{UserID: "129", FirstDay: "20240820000000_bills_groupid1", LastDay: GetLastDayUnix("20240825000000"), Data: "XYZ"},
-		{UserID: "129", FirstDay: "20240822000000_bills_groupid1", LastDay: GetLastDayUnix("20240827000000"), Data: "XYZ"},
-		{UserID: "129", FirstDay: "20240825000000_bills_groupid1", LastDay: GetLastDayUnix("20240830000000"), Data: "XYZ"},
-		{UserID: "129", FirstDay: "20240827000000_bills_groupid1", LastDay: GetLastDayUnix("20240901000000"), Data: "XYZ"},
-		{UserID: "129", FirstDay: "20240828000000_bills_groupid1", LastDay: GetLastDayUnix("20240904000000"), Data: "XYZ"},
+		{UserID: "125", Start: "20240820000000_bills_groupid1", End: GetEndUnix("20240825000000"), Data: "XYZ"},
+		{UserID: "125", Start: "20240822000000_bills_groupid1", End: GetEndUnix("20240827000000"), Data: "XYZ"},
+		{UserID: "125", Start: "20240825000000_bills_groupid1", End: GetEndUnix("20240830000000"), Data: "XYZ"},
+		{UserID: "125", Start: "20240827000000_bills_groupid1", End: GetEndUnix("20240901000000"), Data: "XYZ"},
+		{UserID: "125", Start: "20240828000000_bills_groupid1", End: GetEndUnix("20240904000000"), Data: "XYZ"},
+		{UserID: "126", Start: "20240820000000_bills_groupid1", End: GetEndUnix("20240825000000"), Data: "XYZ"},
+		{UserID: "126", Start: "20240822000000_bills_groupid1", End: GetEndUnix("20240827000000"), Data: "XYZ"},
+		{UserID: "126", Start: "20240825000000_bills_groupid1", End: GetEndUnix("20240830000000"), Data: "XYZ"},
+		{UserID: "126", Start: "20240827000000_bills_groupid1", End: GetEndUnix("20240901000000"), Data: "XYZ"},
+		{UserID: "126", Start: "20240828000000_bills_groupid1", End: GetEndUnix("20240904000000"), Data: "XYZ"},
+		{UserID: "127", Start: "20240820000000_bills_groupid1", End: GetEndUnix("20240825000000"), Data: "XYZ"},
+		{UserID: "127", Start: "20240822000000_bills_groupid1", End: GetEndUnix("20240827000000"), Data: "XYZ"},
+		{UserID: "127", Start: "20240825000000_bills_groupid1", End: GetEndUnix("20240830000000"), Data: "XYZ"},
+		{UserID: "127", Start: "20240827000000_bills_groupid1", End: GetEndUnix("20240901000000"), Data: "XYZ"},
+		{UserID: "127", Start: "20240828000000_bills_groupid1", End: GetEndUnix("20240904000000"), Data: "XYZ"},
+		{UserID: "128", Start: "20240820000000_bills_groupid1", End: GetEndUnix("20240825000000"), Data: "XYZ"},
+		{UserID: "128", Start: "20240822000000_bills_groupid1", End: GetEndUnix("20240827000000"), Data: "XYZ"},
+		{UserID: "128", Start: "20240825000000_bills_groupid1", End: GetEndUnix("20240830000000"), Data: "XYZ"},
+		{UserID: "128", Start: "20240827000000_bills_groupid1", End: GetEndUnix("20240901000000"), Data: "XYZ"},
+		{UserID: "128", Start: "20240828000000_bills_groupid1", End: GetEndUnix("20240904000000"), Data: "XYZ"},
+		{UserID: "129", Start: "20240820000000_bills_groupid1", End: GetEndUnix("20240825000000"), Data: "XYZ"},
+		{UserID: "129", Start: "20240822000000_bills_groupid1", End: GetEndUnix("20240827000000"), Data: "XYZ"},
+		{UserID: "129", Start: "20240825000000_bills_groupid1", End: GetEndUnix("20240830000000"), Data: "XYZ"},
+		{UserID: "129", Start: "20240827000000_bills_groupid1", End: GetEndUnix("20240901000000"), Data: "XYZ"},
+		{UserID: "129", Start: "20240828000000_bills_groupid1", End: GetEndUnix("20240904000000"), Data: "XYZ"},
 	}
 
 	var writeRequests []*dynamodb.WriteRequest
@@ -217,10 +217,10 @@ func main() {
 	queryDate := time.Date(2024, time.Month(8), 27, 7, 7, 7, 0, location) // Today
 
 	keyCond := expression.Key("UserID").Equal(expression.Value("123")).And(
-		expression.Key("FirstDay").LessThan(expression.Value(queryDate.Add(time.Second).Format("20060102150405"))),
+		expression.Key("Start").LessThan(expression.Value(queryDate.Add(time.Second).Format("20060102150405"))),
 	)
 
-	filterExpr := expression.Name("LastDay").GreaterThanEqual(expression.Value(queryDate.Unix()))
+	filterExpr := expression.Name("End").GreaterThanEqual(expression.Value(queryDate.Unix()))
 
 	expr, err := expression.NewBuilder().WithKeyCondition(keyCond).WithFilter(filterExpr).Build()
 	if err != nil {
@@ -251,7 +251,7 @@ func main() {
 
 	fmt.Println("Query results:")
 	for _, item := range retrievedItems {
-		fmt.Printf("UserID: %s, FirstDay: %s, LastDay: %s, Data: %s\n", item.UserID, item.FirstDay, time.Unix(item.LastDay, 0).In(location), item.Data)
+		fmt.Printf("UserID: %s, Start: %s, End: %s, Data: %s\n", item.UserID, item.Start, time.Unix(item.End, 0).In(location), item.Data)
 	}
 
 	/**
@@ -259,7 +259,7 @@ func main() {
 	**/
 
 	userID := "124"
-	firstDay := "20240827000000_bills_groupid2"
+	start := "20240827000000_bills_groupid2"
 
 	deleteInput := &dynamodb.DeleteItemInput{
 		TableName: aws.String("TestTable"),
@@ -267,8 +267,8 @@ func main() {
 			"UserID": {
 				S: aws.String(userID),
 			},
-			"FirstDay": {
-				S: aws.String(firstDay),
+			"Start": {
+				S: aws.String(start),
 			},
 		},
 		ReturnConsumedCapacity: aws.String(dynamodb.ReturnConsumedCapacityTotal),
@@ -293,8 +293,8 @@ func main() {
 					"UserID": {
 						S: aws.String(key.UserID),
 					},
-					"FirstDay": {
-						S: aws.String(key.FirstDay),
+					"Start": {
+						S: aws.String(key.Start),
 					},
 				},
 			},
@@ -339,7 +339,7 @@ func main() {
 	fmt.Printf("Batch delete completed successfully. Consumed capacity: %.2f\n", totalConsumedCapacity)
 }
 
-func GetLastDayUnix(dateStr string) int64 {
+func GetEndUnix(dateStr string) int64 {
 	const layout = "20060102150405"
 
 	parsedTime, err := time.Parse(layout, dateStr)
